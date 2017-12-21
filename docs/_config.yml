@@ -1,0 +1,24 @@
+title: Dispatch
+show_downloads: true
+baseurl: /dispatch
+download:
+  darwin_url: https://github.com/vmware/dispatch/releases/download/v0.1.1/dispatch-darwin
+  linux_url: https://github.com/vmware/dispatch/releases/download/v0.1.1/dispatch-linux
+
+# Build settings
+markdown: kramdown
+theme: jekyll-theme-minimal
+plugins:
+  - jekyll-feed
+
+# Exclude from processing.
+# The following items will not be processed, by default. Create a custom list
+# to override the default setting.
+# exclude:
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/
