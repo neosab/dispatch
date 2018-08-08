@@ -24,6 +24,7 @@ import (
 	"github.com/vmware/dispatch/pkg/function-manager/gen/restapi/operations"
 	"github.com/vmware/dispatch/pkg/functions"
 	"github.com/vmware/dispatch/pkg/functions/injectors"
+	"github.com/vmware/dispatch/pkg/functions/knative"
 	"github.com/vmware/dispatch/pkg/functions/kubeless"
 	"github.com/vmware/dispatch/pkg/functions/noop"
 	"github.com/vmware/dispatch/pkg/functions/openfaas"
@@ -44,6 +45,7 @@ type functionsConfig struct {
 	RiffKafkaBrokers    []string                     `mapstructure:"riff-kafka-brokers" json:"riff-kafka-brokers,omitempty"`
 	RiffNamespace       string                       `mapstructure:"riff-namespace" json:"riff-namespace,omitempty"`
 	KubelessNamespace   string                       `mapstructure:"kubeless-namespace" json:"kubeless-namespace,omitempty"`
+	KnativeNamespace    string                       `mapstructure:"knative-namespace" json:"knative-namespace,omitempty"`
 	FileImageManager    string                       `mapstructure:"file-image-manager" json:"file-image-manager,omitempty"`
 }
 
@@ -72,6 +74,12 @@ func faasDriver(config functionsConfig) functions.FaaSDriver {
 		faas, err = kubeless.New(&kubeless.Config{
 			K8sConfig:       config.K8sConfig,
 			FuncNamespace:   config.KubelessNamespace,
+			ImagePullSecret: config.ImagePullSecret,
+		})
+	case "knative":
+		faas, err = knative.New(&knative.Config{
+			K8sConfig:       config.K8sConfig,
+			FuncNamespace:   config.KnativeNamespace,
 			ImagePullSecret: config.ImagePullSecret,
 		})
 	case "noop":

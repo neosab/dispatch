@@ -199,7 +199,7 @@ func (d *kubelessDriver) GetRunnable(e *functions.FunctionExecution) functions.R
 		}
 		var out functions.Message
 		if err := json.Unmarshal(res, &out); err != nil {
-			return nil, &systemError{errors.Errorf("cannot JSON-parse result from OpenFaaS: %s %s", err, string(res))}
+			return nil, &systemError{errors.Errorf("cannot JSON-parse result from Kubeless: %s %s", err, string(res))}
 		}
 		ctx.AddLogs(out.Context.Logs())
 		ctx.SetError(out.Context.GetError())
