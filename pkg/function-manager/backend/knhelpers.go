@@ -85,7 +85,7 @@ func ToFunction(service *kntypes.Service) *dapi.Function {
 	}
 	objMeta := &service.ObjectMeta
 	var function dapi.Function
-	if err := knaming.FromJSONString(objMeta.Annotations[knaming.InitialObjectAnnotation], &function); err != nil {
+	if err := knaming.FromObjectMeta(&service.ObjectMeta, &function); err != nil {
 		// TODO the right thing
 		panic(errors.Wrap(err, "decoding into function"))
 	}

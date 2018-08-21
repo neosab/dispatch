@@ -20,8 +20,36 @@ import (
 	fnstore "github.com/vmware/dispatch/pkg/function-manager/gen/restapi/operations/store"
 	"github.com/vmware/dispatch/pkg/trace"
 	"github.com/vmware/dispatch/pkg/utils"
+	"path/filepath"
+	"os"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
+const (
+	FunctionType = "Function"
+
+func kubeClientConfig(kubeconfPath string) (*rest.Config, error) {
+	if kubeconfPath == "" {
+		userKubeConfig := filepath.Join(os.Getenv("HOME"), ".kube/config")
+		if _, err := os.Stat(userKubeConfig); err == nil {
+			kubeconfPath = userKubeConfig
+		}
+	}
+	if kubeconfPath != "" {
+		return clientcmd.BuildConfigFromFlags("", kubeconfPath)
+	}
+	return rest.InClusterConfig()
+}
+
+func knClient(kubeconfPath string) knclientset.Interface {
+	config, err := kubeClientConfig(kubeconfPath)
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "error configuring k8s API client"))
+	}
+	return knclientset.NewForConfigOrDie(config)
+}
+
+>>>>>>> e1196a0a... Knative Eventing PoC
 type knHandlers struct {
 	backend    backend.Backend
 	httpClient *http.Client
@@ -93,6 +121,7 @@ func (h *knHandlers) deleteFunction(params fnstore.DeleteFunctionParams) middlew
 	name := params.FunctionName
 
 	err := h.backend.Delete(ctx, &dapi.Meta{Name: name, Org: org, Project: project})
+
 	if err != nil {
 		if _, ok := err.(backend.NotFound); ok {
 			return fnstore.NewDeleteFunctionNotFound().WithPayload(&dapi.Error{
