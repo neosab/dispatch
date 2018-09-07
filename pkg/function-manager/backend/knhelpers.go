@@ -36,7 +36,7 @@ func FromFunction(function *dapi.Function) *kntypes.Service {
 		v1.EnvVar{Name: "TIMEOUT", Value: strconv.FormatInt(function.Timeout, 10)},
 	)
 	return &kntypes.Service{
-		ObjectMeta: knaming.ToObjectMeta(function.Meta, *function),
+		ObjectMeta: *knaming.ToObjectMeta(function),
 		Spec: kntypes.ServiceSpec{
 			RunLatest: &kntypes.RunLatestType{
 				Configuration: kntypes.ConfigurationSpec{
@@ -83,7 +83,6 @@ func ToFunction(service *kntypes.Service) *dapi.Function {
 	if service == nil {
 		return nil
 	}
-	objMeta := &service.ObjectMeta
 	var function dapi.Function
 	if err := knaming.FromObjectMeta(&service.ObjectMeta, &function); err != nil {
 		// TODO the right thing

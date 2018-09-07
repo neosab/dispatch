@@ -29,13 +29,19 @@ import (
 )
 
 const (
-	EventDriverType = "eventdrivertype"
+	// EventDriverType is the event driver type name
+	EventDriverType = "EventDriverType"
 )
 
 // KnativeHandlers is a base struct for event manager drivers API handlers.
 type KnativeHandlers struct {
 	eventingClient *knclientset.Clientset
 	secretsClient  client.SecretsClient
+}
+
+// EventDriverTypeName returns k8s API name of the Dispatch function
+func EventDriverTypeName(meta v1.Meta) string {
+	return knaming.GetKnName("EventDriverType", meta)
 }
 
 // NewKnativeHandlers Creates new instance of driver handlers
@@ -75,9 +81,12 @@ func (h *KnativeHandlers) addDriverType(params driverapi.AddDriverTypeParams, pr
 	}
 
 	driverType := *params.Body
-	driverType.Meta.Org = params.XDispatchOrg
-	driverType.Meta.Project = *params.XDispatchProject
-	driverType.Meta.Name = knaming.GetK8SName(EventDriverType, *params.XDispatchProject, *driverType.Name)
+
+	driverType.Meta = v1.Meta{
+		Org:     params.XDispatchOrg,
+		Project: *params.XDispatchProject,
+		Name:    *driverType.Name,
+	}
 
 	eventSource := FromDriverType(&driverType)
 
@@ -104,12 +113,15 @@ func (h *KnativeHandlers) getDriverType(params driverapi.GetDriverTypeParams, pr
 	span, _ := trace.Trace(params.HTTPRequest.Context(), "")
 	defer span.Finish()
 
-	org := params.XDispatchOrg
-	project := *params.XDispatchProject
+	dispatchMeta := v1.Meta{
+		Org:     params.XDispatchOrg,
+		Project: *params.XDispatchProject,
+		Name:    params.DriverTypeName,
+	}
 
-	name := knaming.GetK8SName(EventDriverType, project, params.DriverTypeName)
+	name := EventDriverTypeName(dispatchMeta)
 
-	eventSource, err := h.eventingClient.FeedsV1alpha1().EventSources(org).Get(name, metav1.GetOptions{})
+	eventSource, err := h.eventingClient.FeedsV1alpha1().EventSources(dispatchMeta.Org).Get(name, metav1.GetOptions{})
 	if err != nil {
 		log.Warnf("Received GET for non-existent driver type %s", params.DriverTypeName)
 		log.Debugf("error when getting driver type: %+v", err)
@@ -158,12 +170,15 @@ func (h *KnativeHandlers) deleteDriverType(params driverapi.DeleteDriverTypePara
 	span, _ := trace.Trace(params.HTTPRequest.Context(), "")
 	defer span.Finish()
 
-	org := params.XDispatchOrg
-	project := *params.XDispatchProject
+	dispatchMeta := v1.Meta{
+		Org:     params.XDispatchOrg,
+		Project: *params.XDispatchProject,
+		Name:    params.DriverTypeName,
+	}
 
-	name := knaming.GetK8SName(EventDriverType, project, params.DriverTypeName)
+	name := EventDriverTypeName(dispatchMeta)
 
-	eventSource, err := h.eventingClient.FeedsV1alpha1().EventSources(org).Get(name, metav1.GetOptions{})
+	eventSource, err := h.eventingClient.FeedsV1alpha1().EventSources(dispatchMeta.Org).Get(name, metav1.GetOptions{})
 	if err != nil {
 		log.Warnf("Received GET for non-existent driver type %s", params.DriverTypeName)
 		log.Debugf("error when getting driver type: %+v", err)
@@ -174,7 +189,7 @@ func (h *KnativeHandlers) deleteDriverType(params driverapi.DeleteDriverTypePara
 			})
 	}
 
-	if err = h.eventingClient.FeedsV1alpha1().EventSources(org).Delete(name, nil); err != nil {
+	if err = h.eventingClient.FeedsV1alpha1().EventSources(dispatchMeta.Org).Delete(name, nil); err != nil {
 		if k8sErrors.IsNotFound(err) {
 			return driverapi.NewDeleteDriverTypeNotFound().WithPayload(
 				&v1.Error{
